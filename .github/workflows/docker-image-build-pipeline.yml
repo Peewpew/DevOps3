@@ -39,7 +39,7 @@ jobs:
       # Build Docker image with dynamic naming
       - name: Build Docker Image
         run: |
-          docker build --no-cache -t ghcr.io/$REPO_NAME/$IMAGE_NAME:$IMAGE_TAG .
+          docker build --no-cache -t ghcr.io/$REPO_NAME/$IMAGE_NAME:$IMAGE_TAG . 
           docker images  # Verify the image
 
       # Push Docker image to GHCR
