@@ -21,48 +21,37 @@ jobs:
           chmod +x /usr/local/bin/hadolint
           hadolint Dockerfile
 
-      # Set environment variables (REPO_NAME, IMAGE_NAME, IMAGE_TAG)
+      # Set environment variables (REPO_NAME, IMAGE_NAME, IMAGE_TAG, and KUBECONFIG)
       - name: Set Environment Variables
         run: |
           echo "REPO_NAME=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
           echo "IMAGE_NAME=devops3" >> $GITHUB_ENV
           echo "IMAGE_TAG=${GITHUB_REF##*/}" >> $GITHUB_ENV
+          
+          # Set up KUBECONFIG environment variable using GitHub secret
+          echo "KUBECONFIG=~/.kube/config" >> $GITHUB_ENV
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBE_CONFIG }}" > ~/.kube/config
 
       # Ensure Docker is installed
       - name: Check if Docker is installed
         run: |
-          if ! docker --version; then
-            echo "Docker is not installed. Please manually install Docker to proceed."
-          else
-            echo "Docker is installed."
-          fi
+          docker --version || echo "Docker is not installed, installing..." && sudo apt install docker.io -y
 
       # Ensure kubectl is installed
       - name: Check if kubectl is installed
         run: |
-          if ! kubectl version --client; then
-            echo "kubectl is not installed. Please manually install kubectl to proceed."
-          else
-            echo "kubectl is installed."
-          fi
+          kubectl version --client || echo "kubectl is not installed, installing..." && sudo apt install kubectl -y
 
       # Ensure minikube is installed
       - name: Check if minikube is installed
         run: |
-          if ! minikube version; then
-            echo "minikube is not installed. Please manually install minikube to proceed."
-          else
-            echo "minikube is installed."
-          fi
+          minikube version || echo "minikube is not installed, installing..." && sudo apt install minikube -y
 
       # Ensure Ansible is installed
       - name: Check if Ansible is installed
         run: |
-          if ! ansible --version; then
-            echo "Ansible is not installed. Please manually install Ansible to proceed."
-          else
-            echo "Ansible is installed."
-          fi
+          ansible --version || echo "Ansible is not installed, installing..." && sudo apt install ansible -y
 
       # Log in to GitHub Container Registry
       - name: Log in to GitHub Container Registry
