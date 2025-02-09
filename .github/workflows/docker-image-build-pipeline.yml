@@ -88,11 +88,15 @@ jobs:
         run: |
           docker push ghcr.io/$REPO_NAME/$IMAGE_NAME:$IMAGE_TAG
 
+
+
+
+
       # Trigger Kubernetes deployment with the new image
-      - name: Deploy Docker Image to Kubernetes using Ansible Playbook
-        run: |
-          ansible-playbook deploy-playbook.yml
-        env:
-          GITHUB_REF: ${{ github.ref }}  # Pass the version tag to the Ansible playbook
-          IMAGE_TAG: ${{ github.ref }}  # Pass the image tag to the playbook for Kubernetes update
-          KUBECONFIG: ${{ secrets.KUBE_CONFIG }}  # Pass the KUBECONFIG as an environment variable
+      #- name: Deploy Docker Image to Kubernetes using Ansible Playbook
+      #  run: |
+      #    ansible-playbook deploy-playbook.yml
+      #  env:
+      #    GITHUB_REF: ${{ github.ref }}  # Pass the version tag to the Ansible playbook
+      #    IMAGE_TAG: ${{ github.ref }}  # Pass the image tag to the playbook for Kubernetes update
+      #    KUBECONFIG: ${{ secrets.KUBE_CONFIG }}  # Pass the KUBECONFIG as an environment variable
