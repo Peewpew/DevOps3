@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment
-  namespace: default  # You can change 'default' to another namespace if needed
+  namespace: default 
 spec:
   replicas: 1
   selector:
@@ -15,6 +15,6 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: ghcr.io/peewpew/devops3/devops3:v1.0.9
+        image: ghcr.io/peewpew/devops3/devops3:{{ lookup('env', 'IMAGE_TAG') }}
         ports:
         - containerPort: 80
