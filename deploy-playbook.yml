@@ -4,21 +4,51 @@
   gather_facts: false  # We don’t need to gather facts in this case
   tasks:
 
-    # Task 1: Apply the Kubernetes Nginx deployment
+    # Task 1: Get the latest tag (Version) from the GitHub repository
+    - name: Fetch latest version tag
+      command: git describe --tags --abbrev=0
+      register: latest_version
+      changed_when: false  # No need to mark as changed
+
+    - name: Set IMAGE_TAG from latest version
+      set_fact:
+        image_tag: "{{ latest_version.stdout }}"
+
+    # Task 2: Apply the Kubernetes Nginx deployment with the new image tag
     - name: Apply Nginx Deployment
       kubernetes.core.k8s:
         state: present
         kubeconfig: "~/.kube/config"  # Ensure it's the correct kubeconfig path
-        definition: "{{ lookup('file', 'nginx-deployment.yml') }}"
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: nginx-deployment
+            namespace: default
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: nginx
+            template:
+              metadata:
+                labels:
+                  app: nginx
+              spec:
+                containers:
+                  - name: nginx
+                    image: "ghcr.io/peewpew/devops3/devops3:{{ image_tag }}"
+                    ports:
+                      - containerPort: 80
 
-    # Task 2: Apply the Kubernetes Nginx Service
+    # Task 3: Apply the Kubernetes Nginx Service
     - name: Apply Nginx Service
       kubernetes.core.k8s:
         state: present
         kubeconfig: "~/.kube/config"  # Ensure it's the correct kubeconfig path
-        definition: "{{ lookup('file', 'nginx-service.yml') }}"
+        definition: "{{ lookup('file', 'nginx-service.yml') }}"  # Ensure service definition is correct
 
-    # Optional: Verify the deployments or run other tasks
+    # Task 4: Verify the deployment
     - name: Get Kubernetes pods status
       command: kubectl get pods
       register: pod_status
