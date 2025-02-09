@@ -19,32 +19,34 @@
       debug:
         msg: "Deploying with image tag: {{ image_tag }}"
 
-    # Task 2: Apply the Kubernetes Nginx deployment with the new image tag
-    - name: Apply Nginx Deployment
-      kubernetes.core.k8s:
-        state: present
-        kubeconfig: "~/.kube/config"  # Ensure it's the correct kubeconfig path
-        definition:
-          apiVersion: apps/v1
-          kind: Deployment
+# Task 2: Apply the Kubernetes Nginx deployment with the new image tag
+- name: Apply Nginx Deployment
+  kubernetes.core.k8s:
+    state: present
+    kubeconfig: "~/.kube/config"  # Ensure it's the correct kubeconfig path
+    definition:
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: nginx-deployment
+        namespace: default
+      spec:
+        replicas: 1
+        selector:
+          matchLabels:
+            app: nginx
+        template:
           metadata:
-            name: nginx-deployment
-            namespace: default
+            labels:
+              app: nginx
           spec:
-            replicas: 1
-            selector:
-              matchLabels:
-                app: nginx
-            template:
-              metadata:
-                labels:
-                  app: nginx
-              spec:
-                containers:
-                  - name: nginx
-                    image: "ghcr.io/peewpew/devops3/devops3:{{ image_tag }}"
-                    ports:
-                      - containerPort: 80
+            containers:
+              - name: nginx
+                image: "ghcr.io/peewpew/devops3/devops3:{{ image_tag }}"
+                imagePullPolicy: Always  # Forces Kubernetes to always pull the latest version
+                ports:
+                  - containerPort: 80
+
 
     # Task 3: Apply the Kubernetes Nginx Service
     - name: Apply Nginx Service
