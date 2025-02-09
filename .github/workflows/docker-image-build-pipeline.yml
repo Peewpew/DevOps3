@@ -31,22 +31,38 @@ jobs:
       # Ensure Docker is installed
       - name: Check if Docker is installed
         run: |
-          docker --version || echo "Docker is not installed, installing..." && sudo apt install docker.io -y
+          if ! docker --version; then
+            echo "Docker is not installed. Please manually install Docker to proceed."
+          else
+            echo "Docker is installed."
+          fi
 
       # Ensure kubectl is installed
       - name: Check if kubectl is installed
         run: |
-          kubectl version --client || echo "kubectl is not installed, installing..." && sudo apt install kubectl -y
+          if ! kubectl version --client; then
+            echo "kubectl is not installed. Please manually install kubectl to proceed."
+          else
+            echo "kubectl is installed."
+          fi
 
       # Ensure minikube is installed
       - name: Check if minikube is installed
         run: |
-          minikube version || echo "minikube is not installed, installing..." && sudo apt install minikube -y
+          if ! minikube version; then
+            echo "minikube is not installed. Please manually install minikube to proceed."
+          else
+            echo "minikube is installed."
+          fi
 
       # Ensure Ansible is installed
       - name: Check if Ansible is installed
         run: |
-          ansible --version || echo "Ansible is not installed, installing..." && sudo apt install ansible -y
+          if ! ansible --version; then
+            echo "Ansible is not installed. Please manually install Ansible to proceed."
+          else
+            echo "Ansible is installed."
+          fi
 
       # Log in to GitHub Container Registry
       - name: Log in to GitHub Container Registry
