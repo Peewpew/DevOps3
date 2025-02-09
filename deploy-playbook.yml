@@ -14,6 +14,11 @@
       set_fact:
         image_tag: "{{ latest_version.stdout }}"
 
+    # Debugging: Print the image tag to ensure correctness
+    - name: Debug image tag being used
+      debug:
+        msg: "Deploying with image tag: {{ image_tag }}"
+
     # Task 2: Apply the Kubernetes Nginx deployment with the new image tag
     - name: Apply Nginx Deployment
       kubernetes.core.k8s:
