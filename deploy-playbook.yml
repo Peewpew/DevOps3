@@ -1,4 +1,3 @@
----
 - name: Deploy to Kubernetes (Locally using minikube)
   hosts: localhost
   gather_facts: true  # Enable fact gathering to ensure system compatibility
@@ -116,11 +115,14 @@
       register: latest_version
       changed_when: false  # No need to mark as changed
 
+    - name: Debug the raw output of the git describe command
+      debug:
+        var: latest_version.stdout
+
     - name: Set IMAGE_TAG from latest version
       set_fact:
         image_tag: "{{ latest_version.stdout }}"
 
-    # Debugging: Print the image tag to ensure correctness
     - name: Debug image tag being used
       debug:
         msg: "Deploying with image tag: {{ image_tag }}"
