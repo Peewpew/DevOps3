@@ -3,7 +3,7 @@
 This repository automates the process of building Docker images, pushing them to GitHub Container Registry (GHCR), and deploying them to a Kubernetes cluster using GitHub Actions and Ansible. Below is a guide to get started and understand the setup.
 
 ## Repository Structure
-
+```
 .
 ├── Dockerfile                # Dockerfile for building the image
 ├── index.html                # Web page served by the Nginx container
@@ -15,6 +15,9 @@ This repository automates the process of building Docker images, pushing them to
 │   └── workflows
 │       └── docker-image-build-pipeline.yml  # GitHub Actions workflow for CI/CD
 └── deploy-playbook.yml       # Ansible playbook for Kubernetes deployment
+```
+
+
 
 ## Prerequisites
 Ensure you have the following tools installed:
@@ -30,7 +33,7 @@ Deployment Issues: If deployment fails, you can check pod logs using kubectl log
 
 ## How it works
 
-# GitHub Actions Workflow
+## GitHub Actions Workflow
 This GitHub Actions pipeline builds and pushes a Docker image to GitHub Container Registry (GHCR) whenever a version tag (e.g., v1.0.0) is pushed to the repository.
 
 Key steps:
@@ -42,7 +45,7 @@ Log in to GHCR: Authenticates to the GitHub Container Registry.
 Build Docker image: Builds the Docker image with a dynamic tag based on the version.
 Push Docker image: Pushes the image to GHCR for use in Kubernetes deployment.
 
-# Ansible playbook
+## Ansible playbook
 
 This Ansible playbook deploys an Nginx app to a local Kubernetes cluster (Minikube):
 Check Dependencies: Verifies if Python, pip3, Ansible, kubectl, minikube, and the Kubernetes Python client are installed, with debug messages if any are missing.
