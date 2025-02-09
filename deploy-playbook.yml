@@ -1,0 +1,28 @@
+---
+- name: Deploy to Kubernetes (Locally using minikube)
+  hosts: localhost
+  gather_facts: false  # We don’t need to gather facts in this case
+  tasks:
+
+    # Task 1: Apply the Kubernetes Nginx deployment
+    - name: Apply Nginx Deployment
+      kubernetes.core.k8s:
+        state: present
+        kubeconfig: "~/.kube/config"  # Ensure it's the correct kubeconfig path
+        definition: "{{ lookup('file', 'nginx-deployment.yml') }}"
+
+    # Task 2: Apply the Kubernetes Nginx Service
+    - name: Apply Nginx Service
+      kubernetes.core.k8s:
+        state: present
+        kubeconfig: "~/.kube/config"  # Ensure it's the correct kubeconfig path
+        definition: "{{ lookup('file', 'nginx-service.yml') }}"
+
+    # Optional: Verify the deployments or run other tasks
+    - name: Get Kubernetes pods status
+      command: kubectl get pods
+      register: pod_status
+
+    - name: Display pod status
+      debug:
+        var: pod_status.stdout
