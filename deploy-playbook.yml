@@ -1,3 +1,4 @@
+---
 - name: Deploy to Kubernetes (Locally using minikube)
   hosts: localhost
   gather_facts: true  # Enable fact gathering to ensure system compatibility
@@ -15,15 +16,13 @@
       changed_when: false
       ignore_errors: yes
 
-    - name: Install Python if not found
-      become: yes
-      package:
-        name: python3
-        state: present
-      when: python_installed.rc != 0
-      tags: install_dependencies
+    - name: Debug if Python is missing
+      debug:
+        msg: "Python3 is missing. Please manually install Python3."
 
-    # Task 3: Install pip3 if not found
+      when: python_installed.rc != 0
+
+    # Task 3: Ensure pip3 is installed
     - name: Check if pip3 is installed
       command: which pip3
       register: pip_installed
@@ -31,13 +30,11 @@
       changed_when: false
       ignore_errors: yes
 
-    - name: Install pip3 if not found
-      become: yes
-      package:
-        name: python3-pip
-        state: present
+    - name: Debug if pip3 is missing
+      debug:
+        msg: "pip3 is missing. Please manually install pip3."
+
       when: pip_installed.rc != 0
-      tags: install_dependencies
 
     # Task 4: Ensure Ansible is installed
     - name: Check if Ansible is installed
@@ -47,13 +44,11 @@
       changed_when: false
       ignore_errors: yes
 
-    - name: Install Ansible if not found
-      become: yes
-      pip:
-        name: ansible
-        state: present
+    - name: Debug if Ansible is missing
+      debug:
+        msg: "Ansible is missing. Please manually install Ansible."
+
       when: ansible_installed.rc != 0
-      tags: install_dependencies
 
     # Task 5: Ensure Kubernetes Python client is installed
     - name: Check if Kubernetes Python client is installed
@@ -63,15 +58,13 @@
       changed_when: false
       ignore_errors: yes
 
-    - name: Install Kubernetes Python client if not found
-      become: yes
-      pip:
-        name: kubernetes
-        state: present
-      when: kubernetes_client_installed.rc != 0
-      tags: install_dependencies
+    - name: Debug if Kubernetes Python client is missing
+      debug:
+        msg: "Kubernetes Python client is missing. Please manually install the Kubernetes Python client."
 
-    # Task 6: Ensure kubectl is installed (OS-specific)
+      when: kubernetes_client_installed.rc != 0
+
+    # Task 6: Ensure kubectl is installed
     - name: Check if kubectl is installed
       command: which kubectl
       register: kubectl_installed
@@ -79,15 +72,13 @@
       changed_when: false
       ignore_errors: yes
 
-    - name: Install kubectl based on OS
-      become: yes
-      package:
-        name: "{{ kubectl_package }}"
-        state: present
-      when: kubectl_installed.rc != 0
-      tags: install_dependencies
+    - name: Debug if kubectl is missing
+      debug:
+        msg: "kubectl is missing. Please manually install kubectl."
 
-    # Task 7: Ensure minikube is installed (OS-specific)
+      when: kubectl_installed.rc != 0
+
+    # Task 7: Ensure minikube is installed
     - name: Check if minikube is installed
       command: which minikube
       register: minikube_installed
@@ -95,13 +86,11 @@
       changed_when: false
       ignore_errors: yes
 
-    - name: Install minikube based on OS
-      become: yes
-      package:
-        name: "{{ minikube_package }}"
-        state: present
+    - name: Debug if minikube is missing
+      debug:
+        msg: "minikube is missing. Please manually install minikube."
+
       when: minikube_installed.rc != 0
-      tags: install_dependencies
 
     # Task 8: Set kubectl and minikube installation packages dynamically based on the OS
     - name: Set package manager variables based on OS
@@ -109,7 +98,19 @@
         kubectl_package: "{{ 'kubectl' if ansible_facts['os_family'] == 'Debian' else 'kubectl-tools' }}"
         minikube_package: "{{ 'minikube' if ansible_facts['os_family'] == 'Debian' else 'minikube-cli' }}"
 
-    # Task 9: Get the latest tag (Version) from the GitHub repository
+    # Task 9: Get the current version of the running deployment (If exists)
+    - name: Fetch current deployed image tag
+      command: kubectl get deployment nginx-deployment -o=jsonpath='{.spec.template.spec.containers[0].image}'
+      register: current_image_tag
+      failed_when: current_image_tag.rc != 0
+      changed_when: false
+      ignore_errors: yes
+
+    - name: Debug current deployed image tag
+      debug:
+        msg: "Current deployed image tag: {{ current_image_tag.stdout }}"
+
+    # Task 10: Get the latest tag (Version) from the GitHub repository
     - name: Fetch latest version tag
       command: git describe --tags --abbrev=0
       register: latest_version
@@ -127,7 +128,7 @@
       debug:
         msg: "Deploying with image tag: {{ image_tag }}"
 
-    # Task 10: Apply the Kubernetes Nginx deployment with the new image tag
+    # Task 11: Apply the Kubernetes Nginx deployment with the new image tag
     - name: Apply Nginx Deployment
       kubernetes.core.k8s:
         state: present
@@ -155,14 +156,14 @@
                     ports:
                       - containerPort: 80
 
-    # Task 11: Apply the Kubernetes Nginx Service
+    # Task 12: Apply the Kubernetes Nginx Service
     - name: Apply Nginx Service
       kubernetes.core.k8s:
         state: present
         kubeconfig: "~/.kube/config"  # Ensure it's the correct kubeconfig path
         definition: "{{ lookup('file', 'nginx-service.yml') }}"  # Ensure service definition is correct
 
-    # Task 12: Verify the deployment
+    # Task 13: Verify the deployment
     - name: Get Kubernetes pods status
       command: kubectl get pods
       register: pod_status
@@ -170,3 +171,31 @@
     - name: Display pod status
       debug:
         var: pod_status.stdout
+
+  handlers:
+    - name: Rollback to previous version
+      kubernetes.core.k8s:
+        state: present
+        kubeconfig: "~/.kube/config"
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: nginx-deployment
+            namespace: default
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: nginx
+            template:
+              metadata:
+                labels:
+                  app: nginx
+              spec:
+                containers:
+                  - name: nginx
+                    image: "ghcr.io/peewpew/devops3/devops3:{{ current_image_tag.stdout }}"  # Rollback to previous image
+                    imagePullPolicy: Always
+                    ports:
+                      - containerPort: 80
