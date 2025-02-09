@@ -28,6 +28,26 @@ jobs:
           echo "IMAGE_NAME=devops3" >> $GITHUB_ENV
           echo "IMAGE_TAG=${GITHUB_REF##*/}" >> $GITHUB_ENV
 
+      # Ensure Docker is installed
+      - name: Check if Docker is installed
+        run: |
+          docker --version || echo "Docker is not installed, installing..." && sudo apt install docker.io -y
+
+      # Ensure kubectl is installed
+      - name: Check if kubectl is installed
+        run: |
+          kubectl version --client || echo "kubectl is not installed, installing..." && sudo apt install kubectl -y
+
+      # Ensure minikube is installed
+      - name: Check if minikube is installed
+        run: |
+          minikube version || echo "minikube is not installed, installing..." && sudo apt install minikube -y
+
+      # Ensure Ansible is installed
+      - name: Check if Ansible is installed
+        run: |
+          ansible --version || echo "Ansible is not installed, installing..." && sudo apt install ansible -y
+
       # Log in to GitHub Container Registry
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v2
@@ -46,3 +66,11 @@ jobs:
       - name: Push Docker Image to GHCR
         run: |
           docker push ghcr.io/$REPO_NAME/$IMAGE_NAME:$IMAGE_TAG
+
+      # Trigger Kubernetes deployment with the new image
+      - name: Deploy Docker Image to Kubernetes using Ansible Playbook
+        run: |
+          ansible-playbook deploy-playbook.yml
+        env:
+          GITHUB_REF: ${{ github.ref }}  # Pass the version tag to the Ansible playbook
+          IMAGE_TAG: ${{ github.ref }}  # Pass the image tag to the playbook for Kubernetes update
