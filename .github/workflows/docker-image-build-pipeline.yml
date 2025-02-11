@@ -65,10 +65,10 @@ jobs:
       - name: Apply Kubernetes Deployment and Service
         run: |
           # Apply the Deployment YAML
-          kubectl apply -f deployment.yml  # Assuming you have deployment.yml file
+          kubectl apply -f nginx-deployment.yml  
           
           # Apply the Service YAML
-          kubectl apply -f nginx-service.yml  # Assuming you have nginx-service.yml file
+          kubectl apply -f nginx-service.yml 
 
       # Wait for the deployment to roll out and pods to be ready
       - name: Wait for Deployment
