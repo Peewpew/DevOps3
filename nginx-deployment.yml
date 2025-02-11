@@ -15,6 +15,6 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: ghcr.io/peewpew/devops3/devops3:{{ lookup('env', 'IMAGE_TAG') }}
+        image: "ghcr.io/peewpew/devops3/devops3:{{ image_tag | default('latest') }}"
         ports:
         - containerPort: 80
