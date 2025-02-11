@@ -33,7 +33,6 @@ jobs:
           mkdir -p ~/.kube
           echo "${{ secrets.KUBE_CONFIG }}" > ~/.kube/config
 
-
       # Log in to GitHub Container Registry
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v2
@@ -47,7 +46,7 @@ jobs:
         run: |
           docker build --no-cache -t ghcr.io/$REPO_NAME/$IMAGE_NAME:$IMAGE_TAG . 
           docker images  # Verify the image
-
+          
       # Scan Docker image for vulnerabilities
       - name: Scan Docker Image for Vulnerabilities
         uses: aquasecurity/trivy-action@master
@@ -61,6 +60,45 @@ jobs:
       - name: Push Docker Image to GHCR
         run: |
           docker push ghcr.io/$REPO_NAME/$IMAGE_NAME:$IMAGE_TAG
+
+      # Apply Kubernetes Deployment and Service using kubectl
+      - name: Apply Kubernetes Deployment and Service
+        run: |
+          # Apply the Deployment YAML
+          kubectl apply -f deployment.yml  # Assuming you have deployment.yml file
+          
+          # Apply the Service YAML
+          kubectl apply -f nginx-service.yml  # Assuming you have nginx-service.yml file
+
+      # Wait for the deployment to roll out and pods to be ready
+      - name: Wait for Deployment
+        run: |
+          kubectl rollout status deployment/nginx-deployment --timeout=60s
+
+      # Retrieve and test the deployed service
+      - name: Test Nginx Deployment
+        run: |
+          # Fetch the correct external URL
+          SERVICE_URL=$(kubectl get svc nginx-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          if [ -z "$SERVICE_URL" ]; then
+            SERVICE_URL=$(kubectl get svc nginx-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          fi
+          
+          # Construct full HTTPS URL
+          FULL_URL="https://$SERVICE_URL"
+          echo "Testing deployed service at: $FULL_URL"
+
+          # Wait a few seconds for service to be accessible
+          sleep 10
+          
+          # Curl the service and validate response
+          HTTP_STATUS=$(curl -ks -o /dev/null -w "%{http_code}" $FULL_URL)
+          if [[ "$HTTP_STATUS" -ne 200 ]]; then
+            echo "❌ Deployment failed! HTTP Status: $HTTP_STATUS"
+            exit 1
+          else
+            echo "✅ Deployment successful! HTTP Status: $HTTP_STATUS"
+          fi
 
 
 
