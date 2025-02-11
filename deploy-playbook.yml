@@ -164,13 +164,18 @@
         definition: "{{ lookup('file', 'nginx-service.yml') }}"  # Ensure service definition is correct
 
     # Task 13: Verify the deployment
-    - name: Get Kubernetes pods status
-      command: kubectl get pods
-      register: pod_status
+    - name: Check rollout status
+      command: kubectl rollout status deployment/nginx-deployment --timeout=60s
+      register: rollout_status
+      failed_when: rollout_status.rc != 0
+      ignore_errors: yes
 
-    - name: Display pod status
+    - name: Trigger rollback if rollout fails
       debug:
-        var: pod_status.stdout
+      msg: "Deployment failed! Rolling back..."
+      notify: Rollback to previous version
+      when: rollout_status.rc != 0
+
 
   handlers:
     - name: Rollback to previous version
